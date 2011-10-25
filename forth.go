@@ -1,4 +1,24 @@
-// forth package
+// the forth package is designed for use by programs 
+// needing to evaluate command-line arguments or simple 
+// expressions to set program variables. It is designed 
+// to map host names to numbers. We use it to 
+// easily convert host names and IP addresses into 
+// parameters. 
+// The language
+// is a Forth-like postfix notation. Elements are 
+// either commands or strings. Strings are 
+// immediately pushed. Commands consume stack variables
+// and produce new ones. 
+// Simple examples: 
+// push hostname, strip alpha characters to produce a number. If your
+// hostname is sb47, top of stack will be left with 47. 
+// hostname  hostbase 
+// Get the hostbase, if it is 0 mod 20, return the hostbase / 20, 
+// else return hostbase mod 20
+// hostname hostbase dup 20 / swap 20 % dup ifelse
+// At the end of the evaluation the stack should have one element 
+// left; that element is popped and returned. It is an error (currently)
+// to return with a non-empty stack. 
 package forth
 
 import (
@@ -29,6 +49,10 @@ var opmap = map[string] forthop {
 	"dup": dup,
 }
 
+// Forth is an interface used by the package. The interface
+// requires definition of Push, Pop, Length, Empty (convenience function
+// meaning Length is 0), Newop (insert a new or replacement operator), 
+// and Reset (clear the stack, mainly diagnostic)
 type Forth  interface{
 	Push(string)
 	Pop() (string)
@@ -38,24 +62,31 @@ type Forth  interface{
 	Reset()
 }
 
+// New creates a new stack
 func New() Forth {
 	f := new(forthstack)
 	return f
 }
 
+// Newop creates a new operation. We considered having
+// an opmap per stack but don't feel the package requires it
 func (f *forthstack) Newop(n string, op forthop) {
 	opmap[n] = op
 }
 
+// Reset resets the stack to empty
 func (f *forthstack) Reset() {
 	f.stack = f.stack[0:0]
 }
 
+// Push pushes the string on the stack. 
 func (f *forthstack) Push(s string) {
 	f.stack = append(f.stack, s)
 	//fmt.Printf("push: %v: stack: %v\n", s, f.stack)
 }
 
+// Pop pops the stack. If the stack is Empty Pop will panic. 
+// Eval recovers() the panic. 
 func (f *forthstack) Pop() (ret string){
 
 	if len(f.stack) < 1 {
@@ -67,14 +98,18 @@ func (f *forthstack) Pop() (ret string){
 	return ret
 }
 
+// Length returns the stack length. 
 func (f *forthstack) Length() int {
 	return len(f.stack)
 }
 
+// Empty is a convenience function synonymous with Length == 0
 func (f *forthstack) Empty() bool {
 	return len(f.stack) == 0
 }
 	
+// errRecover converts panics to errstr iff it is an os.Error, panics
+// otherwise. 
 func errRecover(errp *os.Error){
 	e := recover()
 	if e != nil {
@@ -85,7 +120,11 @@ func errRecover(errp *os.Error){
 	}
 }
 
-/* eval and return TOS and an error if the stack is not empty */
+/* Eval takes a Forth and strings and splits the string on space
+ * characters, pushing each element on the stack or invoking the 
+ * operator if it is found in the opmap. It returns TOS when it is done. 
+ * it is an error to leave the stack non-Empty. 
+ */
 func Eval(f Forth, s string) (ret string, err os.Error) {
 	defer errRecover(&err)
 	for _, val := range(strings.Split(s, " ")) {
