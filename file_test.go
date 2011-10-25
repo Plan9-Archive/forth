@@ -26,6 +26,8 @@ var forthTests = []forthTest{
 	{"4 2 /", "2", ""},
 	{"5 2 %", "1", ""},
 	{"sb43 hostbase", "43", ""},
+	{"sb43 hostbase dup 20 / swap 20 % dup ifelse", "3", ""},
+	{"sb40 hostbase dup 20 / swap 20 % dup ifelse", "2", ""},
 	{"2 4 swap /", "2", ""},
 	{"0 1 1 ifelse", "1", ""},
 	{"0 1 0 ifelse", "0", ""},
