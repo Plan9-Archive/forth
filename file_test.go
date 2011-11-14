@@ -39,7 +39,7 @@ var forthTests = []forthTest{
 
 func TestForth(t *testing.T) {
 
-	forthTests[0].res,_ = os.Hostname()
+	forthTests[0].res, _ = os.Hostname()
 	f := New()
 	if f.Length() != 0 {
 		t.Errorf("Test: stack is %d and should be 0", f.Length())
@@ -62,9 +62,9 @@ func TestForth(t *testing.T) {
 		t.Errorf("Test: After Reset(): stack is %v and should be true", f.Empty())
 	}
 	for _, tt := range forthTests {
-		var err os.Error
+		var err error
 		res, err := Eval(f, tt.val)
-		if res == tt.res || (err != nil && err.String() == tt.err) {
+		if res == tt.res || (err != nil && err.Error() == tt.err) {
 			fmt.Printf("Test: '%v' '%v' '%v': Pass\n", tt.val, res, err)
 		} else {
 			t.Errorf("Test: '%v' '%v' '%v': Fail\n", tt.val, res, err)
@@ -76,5 +76,5 @@ func TestForth(t *testing.T) {
 			t.Errorf("Test: %v: stack is %v and should be empty", tt, f.Empty())
 		}
 	}
-	
+
 }

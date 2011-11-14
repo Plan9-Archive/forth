@@ -22,40 +22,41 @@
 package forth
 
 import (
-	"strconv"
+	"errors"
 	"os"
 	"runtime"
+	"strconv"
 	"strings"
 )
 
-type forthop func (f Forth)
+type forthop func(f Forth)
 
 type forthstack struct {
 	stack []string
 }
 
-var opmap = map[string] forthop {
-	"+": plus, 
-	"-": sub, 
-	"*": times, 
-	"/": div, 
-	"%": mod, 
-	"swap": swap,
-	"ifelse": ifelse,
+var opmap = map[string]forthop{
+	"+":        plus,
+	"-":        sub,
+	"*":        times,
+	"/":        div,
+	"%":        mod,
+	"swap":     swap,
+	"ifelse":   ifelse,
 	"hostname": hostname,
 	"hostbase": hostbase,
-	"strcat": strcat,
-	"roundup": roundup,
-	"dup": dup,
+	"strcat":   strcat,
+	"roundup":  roundup,
+	"dup":      dup,
 }
 
 // Forth is an interface used by the package. The interface
 // requires definition of Push, Pop, Length, Empty (convenience function
 // meaning Length is 0), Newop (insert a new or replacement operator), 
 // and Reset (clear the stack, mainly diagnostic)
-type Forth  interface{
+type Forth interface {
 	Push(string)
-	Pop() (string)
+	Pop() string
 	Length() int
 	Empty() bool
 	Newop(string, forthop)
@@ -87,13 +88,13 @@ func (f *forthstack) Push(s string) {
 
 // Pop pops the stack. If the stack is Empty Pop will panic. 
 // Eval recovers() the panic. 
-func (f *forthstack) Pop() (ret string){
+func (f *forthstack) Pop() (ret string) {
 
 	if len(f.stack) < 1 {
-		panic(os.NewError("Empty stack"))
+		panic(errors.New("Empty stack"))
 	}
 	ret = f.stack[len(f.stack)-1]
-	f.stack = f.stack[0:len(f.stack)-1]
+	f.stack = f.stack[0 : len(f.stack)-1]
 	//fmt.Printf("Pop: %v stack %v\n", ret, f.stack)
 	return ret
 }
@@ -107,16 +108,16 @@ func (f *forthstack) Length() int {
 func (f *forthstack) Empty() bool {
 	return len(f.stack) == 0
 }
-	
+
 // errRecover converts panics to errstr iff it is an os.Error, panics
 // otherwise. 
-func errRecover(errp *os.Error){
+func errRecover(errp *error) {
 	e := recover()
 	if e != nil {
 		if _, ok := e.(runtime.Error); ok {
 			panic(e)
 		}
-		*errp = e.(os.Error)
+		*errp = e.(error)
 	}
 }
 
@@ -125,9 +126,9 @@ func errRecover(errp *os.Error){
  * operator if it is found in the opmap. It returns TOS when it is done. 
  * it is an error to leave the stack non-Empty. 
  */
-func Eval(f Forth, s string) (ret string, err os.Error) {
+func Eval(f Forth, s string) (ret string, err error) {
 	defer errRecover(&err)
-	for _, val := range(strings.Split(s, " ")) {
+	for _, val := range strings.Split(s, " ") {
 		/* two or more spaces can have odd results */
 		if len(val) == 0 || val == " " {
 			continue
@@ -141,7 +142,7 @@ func Eval(f Forth, s string) (ret string, err os.Error) {
 	}
 	ret = f.Pop()
 	return
-	
+
 }
 
 func plus(f Forth) {
@@ -161,28 +162,28 @@ func times(f Forth) {
 func sub(f Forth) {
 	x, _ := strconv.Atoi(f.Pop())
 	y, _ := strconv.Atoi(f.Pop())
-	z := y-x
+	z := y - x
 	f.Push(strconv.Itoa(z))
 }
 
 func div(f Forth) {
 	x, _ := strconv.Atoi(f.Pop())
 	y, _ := strconv.Atoi(f.Pop())
-	z := y/x
+	z := y / x
 	f.Push(strconv.Itoa(z))
 }
 
 func mod(f Forth) {
 	x, _ := strconv.Atoi(f.Pop())
 	y, _ := strconv.Atoi(f.Pop())
-	z := y%x
+	z := y % x
 	f.Push(strconv.Itoa(z))
 }
 
 func roundup(f Forth) {
 	rnd, _ := strconv.Atoi(f.Pop())
 	v, _ := strconv.Atoi(f.Pop())
-	v = ((v + rnd-1)/rnd)*rnd
+	v = ((v + rnd - 1) / rnd) * rnd
 	f.Push(strconv.Itoa(v))
 }
 
@@ -196,7 +197,7 @@ func swap(f Forth) {
 func strcat(f Forth) {
 	x := f.Pop()
 	y := f.Pop()
-	f.Push(y+x)
+	f.Push(y + x)
 }
 
 func dup(f Forth) {
@@ -206,7 +207,7 @@ func dup(f Forth) {
 }
 
 func ifelse(f Forth) {
-	x,_ := strconv.Atoi(f.Pop())
+	x, _ := strconv.Atoi(f.Pop())
 	y := f.Pop()
 	z := f.Pop()
 	if x != 0 {
@@ -216,7 +217,7 @@ func ifelse(f Forth) {
 	}
 }
 
-func hostname(f Forth){
+func hostname(f Forth) {
 	h, err := os.Hostname()
 	if err != nil {
 		panic("No hostname")
