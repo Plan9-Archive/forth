@@ -145,44 +145,52 @@ func Eval(f Forth, s string) (ret string, err error) {
 
 }
 
+func toInt(f Forth) int {
+	i, err := strconv.Atoi(f.Pop())
+	if err != nil {
+		panic(err)
+	}
+	return i
+}
+
 func plus(f Forth) {
-	x, _ := strconv.Atoi(f.Pop())
-	y, _ := strconv.Atoi(f.Pop())
+	x := toInt(f)
+	y := toInt(f)
 	z := x + y
 	f.Push(strconv.Itoa(z))
 }
 
 func times(f Forth) {
-	x, _ := strconv.Atoi(f.Pop())
-	y, _ := strconv.Atoi(f.Pop())
+	x := toInt(f)
+	y := toInt(f)
 	z := x * y
 	f.Push(strconv.Itoa(z))
 }
 
 func sub(f Forth) {
-	x, _ := strconv.Atoi(f.Pop())
-	y, _ := strconv.Atoi(f.Pop())
+	x := toInt(f)
+	y := toInt(f)
 	z := y - x
 	f.Push(strconv.Itoa(z))
 }
 
 func div(f Forth) {
-	x, _ := strconv.Atoi(f.Pop())
-	y, _ := strconv.Atoi(f.Pop())
+	x := toInt(f)
+	y := toInt(f)
 	z := y / x
 	f.Push(strconv.Itoa(z))
 }
 
 func mod(f Forth) {
-	x, _ := strconv.Atoi(f.Pop())
-	y, _ := strconv.Atoi(f.Pop())
+	x := toInt(f)
+	y := toInt(f)
 	z := y % x
 	f.Push(strconv.Itoa(z))
 }
 
 func roundup(f Forth) {
-	rnd, _ := strconv.Atoi(f.Pop())
-	v, _ := strconv.Atoi(f.Pop())
+	rnd := toInt(f)
+	v := toInt(f)
 	v = ((v + rnd - 1) / rnd) * rnd
 	f.Push(strconv.Itoa(v))
 }
@@ -207,7 +215,7 @@ func dup(f Forth) {
 }
 
 func ifelse(f Forth) {
-	x, _ := strconv.Atoi(f.Pop())
+	x := toInt(f)
 	y := f.Pop()
 	z := f.Pop()
 	if x != 0 {

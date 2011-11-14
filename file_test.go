@@ -35,6 +35,7 @@ var forthTests = []forthTest{
 	{"1 dup +", "2", ""},
 	{"4095 4096 roundup", "4096", ""},
 	{"4097 8192 roundup", "8192", ""},
+	{"2 x +", "", "parsing \"x\": invalid syntax"},
 }
 
 func TestForth(t *testing.T) {
@@ -65,6 +66,10 @@ func TestForth(t *testing.T) {
 		var err error
 		res, err := Eval(f, tt.val)
 		if res == tt.res || (err != nil && err.Error() == tt.err) {
+			if err != nil {
+				/* stack is not going to be right; reset it. */
+				f.Reset()
+			}
 			fmt.Printf("Test: '%v' '%v' '%v': Pass\n", tt.val, res, err)
 		} else {
 			t.Errorf("Test: '%v' '%v' '%v': Fail\n", tt.val, res, err)
