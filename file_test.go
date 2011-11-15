@@ -36,6 +36,8 @@ var forthTests = []forthTest{
 	{"4095 4096 roundup", "4096", ""},
 	{"4097 8192 roundup", "8192", ""},
 	{"2 x +", "", "parsing \"x\": invalid syntax"},
+	{"1 dd +", "2", ""},
+	{"1 d3d", "3", ""},
 }
 
 func TestForth(t *testing.T) {
@@ -62,6 +64,8 @@ func TestForth(t *testing.T) {
 	if f.Empty() != true {
 		t.Errorf("Test: After Reset(): stack is %v and should be true", f.Empty())
 	}
+	NewWord(f, "dd", "dup")
+	NewWord(f, "d3d", "dup dup + +")
 	for _, tt := range forthTests {
 		var err error
 		res, err := Eval(f, tt.val)
@@ -73,6 +77,7 @@ func TestForth(t *testing.T) {
 			fmt.Printf("Test: '%v' '%v' '%v': Pass\n", tt.val, res, err)
 		} else {
 			t.Errorf("Test: '%v' '%v' '%v': Fail\n", tt.val, res, err)
+			fmt.Printf("ops %v\n", Ops())
 		}
 		if f.Length() != 0 {
 			t.Errorf("Test: %v: stack is %d and should be empty", tt, f.Length())

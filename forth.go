@@ -61,6 +61,7 @@ type Forth interface {
 	Empty() bool
 	Newop(string, forthop)
 	Reset()
+	Stack()[]string
 }
 
 // New creates a new stack
@@ -75,9 +76,16 @@ func (f *forthstack) Newop(n string, op forthop) {
 	opmap[n] = op
 }
 
+func  Ops() (map[string] forthop){
+	return opmap
+}
 // Reset resets the stack to empty
 func (f *forthstack) Reset() {
 	f.stack = f.stack[0:0]
+}
+// Return the stack as a []string
+func (f *forthstack) Stack() []string{
+	return f.stack
 }
 
 // Push pushes the string on the stack. 
@@ -121,13 +129,11 @@ func errRecover(errp *error) {
 	}
 }
 
-/* Eval takes a Forth and strings and splits the string on space
+/* iEval takes a Forth and strings and splits the string on space
  * characters, pushing each element on the stack or invoking the 
- * operator if it is found in the opmap. It returns TOS when it is done. 
- * it is an error to leave the stack non-Empty. 
+ * operator if it is found in the opmap. 
  */
-func Eval(f Forth, s string) (ret string, err error) {
-	defer errRecover(&err)
+func iEval(f Forth, s string) {
 	for _, val := range strings.Split(s, " ") {
 		/* two or more spaces can have odd results */
 		if len(val) == 0 || val == " " {
@@ -140,6 +146,16 @@ func Eval(f Forth, s string) (ret string, err error) {
 			f.Push(val)
 		}
 	}
+	return
+}
+/* Eval takes a Forth and strings and splits the string on space
+ * characters, pushing each element on the stack or invoking the 
+ * operator if it is found in the opmap. It returns TOS when it is done. 
+ * it is an error to leave the stack non-Empty. 
+ */
+func Eval(f Forth, s string) (ret string, err error) {
+	defer errRecover(&err)
+	iEval(f, s)
 	ret = f.Pop()
 	return
 
@@ -237,3 +253,13 @@ func hostbase(f Forth) {
 	host := f.Pop()
 	f.Push(strings.TrimLeft(host, "abcdefghijklmnopqrstuvwxyz -"))
 }
+
+func NewWord(f Forth, name, command string) {
+	newword := func(f Forth) {
+		iEval(f, command)
+		return
+	}
+	opmap[name] = newword
+	return
+}
+
